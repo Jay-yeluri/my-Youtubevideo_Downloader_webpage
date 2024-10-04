@@ -8,7 +8,6 @@ app = FastAPI()
 
 allow_origins = ["*"]
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
@@ -24,17 +23,22 @@ async def download_video(link: str = Form(...)):
     video_filename = "sample.mp4"
     output_path = os.path.join(cur_dir, video_filename)
 
-    
     youtube_dl_options = {
-        "format": "best",
+        "format": "bestvideo+bestaudio/best",  # Use best available formats
         "outtmpl": output_path,
     }
 
     try:
+        
+        with yt_dlp.YoutubeDL() as ydl:
+            ydl.sanitize_info(ydl.extract_info(link, download=False))  # Extract info without downloading
+            formats = ydl.list_formats([link])
+            print(f"Available formats for {link}: {formats}")  # Log formats for debugging
+
+        
         with yt_dlp.YoutubeDL(youtube_dl_options) as ydl:
             ydl.download([link])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    
     return FileResponse(output_path, media_type='video/mp4', filename=video_filename)
