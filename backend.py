@@ -29,13 +29,18 @@ async def download_video(link: str = Form(...)):
     }
 
     try:
-        
+        # Create a YoutubeDL object
         with yt_dlp.YoutubeDL() as ydl:
-            ydl.sanitize_info(ydl.extract_info(link, download=False))  # Extract info without downloading
-            formats = ydl.list_formats([link])
-            print(f"Available formats for {link}: {formats}")  # Log formats for debugging
+            # Extract video information
+            info_dict = ydl.extract_info(link, download=False)
+            # Get the available formats
+            formats = info_dict.get('formats', [])
+            
+            # Print available formats for debugging
+            for format in formats:
+                print(f"Format ID: {format['format_id']}, Extension: {format['ext']}, Resolution: {format.get('height', 'N/A')}p")
 
-        
+        # Download the video
         with yt_dlp.YoutubeDL(youtube_dl_options) as ydl:
             ydl.download([link])
     except Exception as e:
